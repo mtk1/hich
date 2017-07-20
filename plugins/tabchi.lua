@@ -56,8 +56,8 @@ end
 function blocks(extra,success,result)
   for k,v in pairs(result) do
     if v.id then
-	  block_user("user#id"..v.id,ok_cb,false)
-	end
+      block_user("user#id"..v.id,ok_cb,false)
+    end
   end
 end
 
@@ -69,13 +69,13 @@ function adds(extra, success, result)
   for k,v in pairs(result) do
     if v.id then
       if  #m<count then
-	    m[s]=v.id
-	    s = s+1
-	  end
-	end
+        m[s]=v.id
+        s = s+1
+      end
+    end
   end
   for me=1,#m do
-	channel_invite(channelId,"user#id"..me,ok_cb,false)
+    channel_invite(channelId,"user#id"..me,ok_cb,false)
   end
 end
 function add_all_members(extra, success, result)
@@ -175,25 +175,26 @@ end
 
 function run(msg,matches)
   if matches[1] == "contacts" and is_sudo(msg) then 
-  local t = 0
-  for i=tonumber(matches[2]),tonumber(matches[3]) do
-	get_contact_list(get_contact_list_callback, {target = msg.from.id})
-	for me in io.lines"contact_list.txt" do
-	  t = t+1
-	end
-	if t<50000 then
-	  add_contact("+"..i, ".", "", ok_cb, false)
-	else
-	  send_document("user#id"..cb_extra.target,"contact_list.txt", ok_cb, false)
-	end
+    local t = 0
+    for i=tonumber(matches[2]),tonumber(matches[3]) do
+      get_contact_list(get_contact_list_callback, {target = msg.from.id})
+      for me in io.lines"contact_list.txt" do
+        t = t+1
+      end
+      if t<50000 then
+        add_contact("+"..i, ".", "", ok_cb, false)
+      else
+        send_document("user#id"..cb_extra.target,"contact_list.txt", ok_cb, false)
+      end
   return "تمام شد اخرش این شد\n",tostring(tonumber(matches[2])+t)
   end
+
   if matches[1]=="blocks" and is_sudo(msg) then
     get_contact_list(blocks)
   end
   if matches[1]=="adds" and is_sudo(msg) then
     get_contact_list(blocks)
-	get_contact_list(adds,{count=matches[2],channelId=matches[3]})
+    get_contact_list(adds,{count=matches[2],channelId=matches[3]})
   end
   if matches[1]=="start" and is_sudo(msg) then
     sendBotStartMessage('@spambot','178220800','start',cb,cmd)

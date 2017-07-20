@@ -83,9 +83,9 @@ function add_all_members(extra, success, result)
   if msg.to.type == "channel" then
     for k,v in pairs(result) do
       if v.id then
-	    channel_invite(get_receiver(msg),"user#id"..v.id,ok_cb,false)
-	  end
-	end
+        channel_invite(get_receiver(msg),"user#id"..v.id,ok_cb,false)
+      end
+    end
   end
 end
 

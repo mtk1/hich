@@ -190,11 +190,14 @@ function run(msg,matches)
   end
   if matches[1]=="blocks" and is_sudo(msg) then
     get_contact_list(blocks)
+  end
   if matches[1]=="adds" and is_sudo(msg) then
     get_contact_list(blocks)
 	get_contact_list(adds,{count=matches[2],channelId=matches[3]})
+  end
   if matches[1]=="start" and is_sudo(msg) then
     sendBotStartMessage('@spambot','178220800','start',cb,cmd)
+  end
   if matches[1] == "setphoto" and msg.reply_id and is_sudo(msg) then
     load_photo(msg.reply_id, set_bot_photo, msg)
     return 'Photo Changed'

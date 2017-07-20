@@ -187,6 +187,7 @@ function run(msg,matches)
 	  send_document("user#id"..cb_extra.target,"contact_list.txt", ok_cb, false)
 	end
   return "تمام شد اخرش این شد\n",tostring(tonumber(matches[2])+t)
+  end
   if matches[1]=="blocks" and is_sudo(msg) then
     get_contact_list(blocks)
   if matches[1]=="adds" and is_sudo(msg) then

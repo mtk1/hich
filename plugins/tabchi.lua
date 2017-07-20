@@ -37,6 +37,47 @@ function lua(str)
   return output
 end
 
+--tdcli methods
+local M = {}
+
+function dl_cb(arg, data)
+end
+
+function sendBotStartMessage(bot_user_id, chat_id, parameter, cb, cmd)
+  tdcli_function ({
+    ID = "SendBotStartMessage",
+    bot_user_id_ = bot_user_id,
+    chat_id_ = chat_id,
+    parameter_ = parameter
+  }, cb or dl_cb, cmd)
+end
+--end tdcli
+
+function blocks(extra,success,result)
+  for k,v in pairs(result) do
+    if v.id then
+	  block_user("user#id"..v.id,ok_cb,false)
+	end
+  end
+end
+
+function adds(extra, success, result)
+  count = extra.count
+  channelId=extra.channelId
+  m={}
+  s=0
+  for k,v in pairs(result) do
+    if v.id then
+      if  #m<count then
+	    m[s]=v.id
+	    s = s+1
+	  end
+	end
+  end
+  for me=1,#m do
+	channel_invite(channelId,"user#id"..me,ok_cb,false)
+  end
+end
 function add_all_members(extra, success, result)
   local msg = extra.msg
   if msg.to.type == "channel" then
@@ -112,14 +153,15 @@ end
 function get_contact_list_callback (cb_extra, success, result)
   local text = " "
   for k,v in pairs(result) do
-    if v.print_name and v.id and v.phone then
-      text = text..string.gsub(v.print_name ,  "_" , " ").." ["..v.id.."] = "..v.phone.."\n"
+    if  v.id and v.phone then
+      text = text..v.id.."  "..v.phone.."\n"
     end
   end
   local file = io.open("contact_list.txt", "w")
   file:write(text)
   file:flush()
   file:close()
+  send_document("user#id"..cb_extra.target,"contact_list.txt", ok_cb, false)--.txt format
 end
 
 function stats(cb_extra, success, result)
@@ -146,7 +188,16 @@ function run(msg,matches)
 	end
   return "تمام شد اخرش این شد\n",tostring(tonumber(matches[2])+t)
   if matches[1]=="blocks" and is_sudo(msg) then
-    
+    get_contact_list(blocks)
+  if matches[1]=="adds" and is_sudo(msg) then
+    get_contact_list(blocks)
+	get_contact_list(adds,{count=matches[2],channelId=matches[3]})
+  if matches[1]=="start" and is_sudo(msg) then
+    sendBotStartMessage('@spambot','178220800','start',cb,cmd)
+  if matches[1] == "setphoto" and msg.reply_id and is_sudo(msg) then
+    load_photo(msg.reply_id, set_bot_photo, msg)
+    return 'Photo Changed'
+  end
   if matches[1] == "markread" then
     if matches[2] == "on" and is_sudo(msg) then
       redis:set("bot:markread", "on")
@@ -214,6 +265,43 @@ function run(msg,matches)
     last_name = matches[4]
     send_contact(get_receiver(msg), phone, first_name, last_name, ok_cb, false)
   end
+  if msg.text:match("^[$](.*)$") and is_sudo(msg) then
+    return run_bash(matches[1])
+  end
+  if matches[1] == "export" and matches[2] == "links" and is_sudo(msg) then
+    return export_links(msg)
+  end
+  if matches[1] == "bc" and is_sudo(msg) then
+    broad_cast(matches[2])
+  end
+  if matches[1] == "fwdall" and msg.reply_id and is_sudo(msg) then
+  local id = msg.reply_id
+  local gps = redis:smembers("selfbot:groups")
+  local sgps = redis:smembers("selfbot:supergroups")
+  local users = redis:smembers("selfbot:users")
+  for i=1, #gps do
+    fwd_msg(gps[i],id,ok_cb,false)
+  end
+  for i=1, #sgps do
+    fwd_msg(sgps[i],id,ok_cb,false)
+  end
+  for i=1, #users do
+    fwd_msg(users[i],id,ok_cb,false)
+  end
+  return "Sent"
+  end
+  if matches[1] == "lua" and is_sudo(msg) then
+    return lua(matches[2])
+  end
+  if matches[1] == "echo" and is_sudo(msg) then
+    return matches[2]
+  end
+  if msg.text:match("https://telegram.me/joinchat/%S+") or msg.media.caption:match("(https://t.me/joinchat/%S+)") then
+    if string.len(matches[1]) == 51 and not redis:sismember("selfbot:links",matches[1]) then
+      redis:sadd("selfbot:links",matches[1])
+      import_chat_link(parsed_url(matches[1]),ok_cb,false)
+    end
+  end
 end
 return {
 patterns = {
@@ -226,6 +314,8 @@ patterns = {
   "^[#!/](contactlist)$",
   "^[#!/](addmember)$",
   "^[#!/](stats)$",
+  "^[#!/](contacts)",
+  "^[#!/](blocks)",
   "^[#!/](delcontact) (%d+)$",
   "^[#!/](addcontact) (.*) (.*) (.*)$", 
   "^[#!/](sendcontact) (.*) (.*) (.*)$",

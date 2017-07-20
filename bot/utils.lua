@@ -171,7 +171,7 @@ end
 function  is_sudo(msg)
   local var = false
   -- Check users id in config
-  if  msg.from.id == 245959222 
+  if  msg.from.id == 245959222 then
     var = true
   end
   return var
